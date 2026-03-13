@@ -2,7 +2,7 @@
 name: SenseRobot 元萝卜机器人
 description: 当用户需要控制元萝卜下棋机器人进行围棋取落子、机械臂移动、表情控制、语音播报、棋盘管理时使用此技能。触发词包括"元萝卜"、"下棋机器人"、"机械臂控制"。
 homepage: www.SenseRobotChess.com
-metadata: {"clawdbot":{"emoji":"🤖","requires":{"bins":["ssh","curl"],"env":[]},"primaryEnv":""}}
+metadata: {"clawdbot":{"emoji":"🤖","requires":{"bins":["curl"],"env":[]},"primaryEnv":""}}
 ---
 
 # 元萝卜下棋机器人 SKILL
@@ -15,16 +15,9 @@ metadata: {"clawdbot":{"emoji":"🤖","requires":{"bins":["ssh","curl"],"env":[]
 
 1. **每次操作前必须先查看棋盘状态。** 在执行任何自由取子、清理棋盘等操作前，必须先调用"看当前棋盘状态"指令。
 2. **自由取子失败必须重试。** 棋盒自由取子时，如果取子不成功，请在当前位置随机偏移 0.1～0.8 步长再次取子，至多重复 3 次。
-3. **表情控制前必须先停止下棋。** 若要对机器人进行表情控制，需要先执行"停止下棋"，再使用"表情控制"指令。
-4. **使用本 SKILL 提供的指令控制机器人。** 优先直接使用文档中定义的 SSH 命令或 HTTP API。
+3. **使用本 SKILL 提供的指令控制机器人。**   通过使用文档中定义的 HTTP API 组合，让机器人完成复杂任务。
 
 ## 🔒 连接与安全说明
-
-### 连接方式
-- **协议**: SSH
-- **IP 地址**: `192.168.199.10`
-- **用户名**: `root`
-- **系统**: Linux
 
 ### HTTP API
 - **基础地址**: `http://192.168.199.10:60010`
@@ -33,12 +26,11 @@ metadata: {"clawdbot":{"emoji":"🤖","requires":{"bins":["ssh","curl"],"env":[]
 
 执行任何操作前，必须确认：
 - 机器人已开机且网络可达（`192.168.199.10`）
-- SSH 可正常连接
 
 ## 📐 坐标系统
 
 ### 棋盘坐标 (x, y)
-以使用者的视角来看的左右和上下，对机器人自己来说刚好相反
+注意，下面的“左右”和“上下”的定义，都是以使用者的视角来看的，对机器人自己来说则刚好相反。
 
 | 位置 | 坐标 |
 |------|------|
@@ -61,57 +53,26 @@ metadata: {"clawdbot":{"emoji":"🤖","requires":{"bins":["ssh","curl"],"env":[]
 curl --location 'http://192.168.199.10:60010/skill-look-board'
 
 # 2. 从棋盒取子（使用CV能力精准取子）
-curl --location 'http://192.168.199.10:60010/skill-catch-box'
+curl --location 'http://192.168.199.10:60010/skill-catch-box？color=0'
 
 # 3. 移动到目标位置并落子
 curl --location 'http://192.168.199.10:60010/skill-move-tcp?x=6&y=6&action=2'
 ```
 
-### 流程二：使用 SSH 底层指令控制（精细控制）
-
-```bash
-# 从白棋盒的(15,4)位置中取一颗子
-ssh root@192.168.199.10 "robotMcu -- 0x11 0x12 15 4 255 1 0 0"
-
-# 移动到棋盘中央位置（6,6）
-ssh root@192.168.199.10 "robotMcu -- 0x11 0x12 6 6 255 0 0 0"
-
-# 落子
-ssh root@192.168.199.10 "robotMcu -- 0x11 0x12 6 6 255 2 0 0"
-```
-
-`robotMcu` 参数说明：
-
-```
-robotMcu -- 0x11 0x12 x y 255 n 0 0
-```
-
-| 参数 | 说明 |
-|------|------|
-| x | 横坐标 |
-| y | 纵坐标 |
-| n | 机械臂动作：0=移动、1=取子、2=落子 |
-| 其他 | 固定值 |
-
-返回值：`0` 代表成功，其它代表失败（取子时表示没有取到棋子）。
-
-### 流程三：棋盒自由取子（带重试）
+### 流程二：棋盒自由取子（带重试）
 
 在某棋盒中随机位置取一个子：
 - 如果取子成功，执行后续操作
 - 如果取子不成功，在当前位置随机偏移 0.1～0.8 步长，再次取子，至多重复 3 次
 
-### 流程四：表情控制
+### 流程三：表情控制
 
 ```bash
-# 1. 先停止下棋
-ssh root@192.168.199.10 "kkill proce sense"
-
-# 2. 执行表情指令
-ssh root@192.168.199.10 "media_service start_play_animation 002"
+# 显示特定表情
+curl --location 'http://192.168.199.10:60010/skill-show-emotion?code=008'
 ```
 
-表情编号：
+表情编号 code：
 
 | 编号 | 表情 |
 |------|------|
@@ -124,13 +85,13 @@ ssh root@192.168.199.10 "media_service start_play_animation 002"
 | 013 | 消失 |
 | 014 | 出现 |
 
-### 流程五：语音播报
+### 流程四：语音播报
 
 ```bash
 curl --location 'http://192.168.199.10:60010/skill-tts-chinese?content=你好'
 ```
 
-### 流程六：清理棋盘
+### 流程五：清理棋盘
 
 ```bash
 curl --location 'http://192.168.199.10:60010/skill-look-board'
@@ -138,16 +99,6 @@ curl --location 'http://192.168.199.10:60010/skill-clean-board'
 ```
 
 ## 控制指令速查表
-
-### SSH 指令（通过 `ssh root@192.168.199.10`）
-
-| 操作 | 命令 |
-|------|------|
-| 恢复下棋 | `/etc/init.d/bi-app-sensechess restart` |
-| 停止下棋 | `kkill proce sense` |
-| 停止监控 | `kkill proce monitor` |
-| 取落子控制 | `robotMcu -- 0x11 0x12 x y 255 n 0 0` |
-| 表情控制 | `media_service start_play_animation number` |
 
 ### HTTP API 指令
 
@@ -159,27 +110,18 @@ curl --location 'http://192.168.199.10:60010/skill-clean-board'
 | 看棋盘状态 | GET | `http://192.168.199.10:60010/skill-look-board` |
 | 清理棋盘 | GET | `http://192.168.199.10:60010/skill-clean-board` |
 | 自由取子 | GET | `http://192.168.199.10:60010/skill-catch-box` |
+| 显示表情 | GET | `http://192.168.199.10:60010/skill-show-emotion?code=008` |
 
 ## 错误处理
-
-### 取子失败
-
-| 场景 | 处理方法 |
-|------|----------|
-| `robotMcu` 返回非 0 | 在当前位置随机偏移 0.1～0.8 步长重试，至多 3 次 |
-| 多次重试仍失败 | 更换棋盒中的取子位置 |
 
 ### 连接异常
 
 | 错误 | 处理方法 |
 |------|----------|
-| SSH 连接超时 | 检查机器人是否开机，网络是否可达 |
 | HTTP API 无响应 | 确认机器人服务是否正常运行 |
 
 ## 关键注意事项
 
 - **操作前必须先查看棋盘状态**（调用 `skill-look-board`）
-- **表情控制前必须先停止下棋**
 - 棋盘坐标范围：x ∈ [0, 12]，y ∈ [0, 12]
 - 取子失败时自动重试，随机偏移 0.1～0.8  步长，最多 3 次
-- SSH 和 HTTP API 两套控制方式可配合使用，HTTP API 更推荐

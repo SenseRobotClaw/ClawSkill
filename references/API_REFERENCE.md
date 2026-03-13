@@ -3,7 +3,6 @@
 ## 连接信息
 
 - **IP 地址**: `192.168.199.10`
-- **SSH 用户**: `root`
 - **HTTP API 端口**: `60010`
 
 ---
@@ -60,38 +59,16 @@ GET http://192.168.199.10:60010/skill-tts-chinese?content=你好
 
 ---
 
-## 二、SSH 指令
+### 1.7 表情控制
 
-所有 SSH 指令通过 `ssh root@192.168.199.10` 执行。
+- **URL**: `GET 'http://192.168.199.10:60010/skill-show-emotion?code=008'`
 
-### 2.1 服务管理
+| 查询参数 | 类型 | 说明 |
+|----------|------|------|
+| code | number | 表情编号 |
 
-| 操作 | 命令 |
-|------|------|
-| 恢复下棋 | `/etc/init.d/bi-app-sensechess restart` |
-| 停止下棋 | `kkill proce sense` |
-| 停止监控 | `kkill proce monitor` |
 
-### 2.2 机械臂控制 (robotMcu)
-
-```
-robotMcu -- 0x11 0x12 x y 255 n 0 0
-```
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| x | number | 横坐标 |
-| y | number | 纵坐标 |
-| n | integer | 0=移动、1=取子、2=落子 |
-| 其他 | - | 固定值（0x11 0x12 ... 255 ... 0 0） |
-
-**返回值**：`0` 表示成功，其它表示失败。
-
-### 2.3 表情控制
-
-```
-media_service start_play_animation <number>
-```
+- **说明**:
 
 | 编号 | 表情 |
 |------|------|
@@ -104,7 +81,6 @@ media_service start_play_animation <number>
 | 013 | 消失 |
 | 014 | 出现 |
 
-**前置条件**: 必须先执行 `kkill proce sense` 停止下棋。
 
 ---
 
