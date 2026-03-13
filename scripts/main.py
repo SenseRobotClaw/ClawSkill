@@ -11,7 +11,6 @@ import urllib.parse
 
 ROBOT_IP = "192.168.199.10"
 API_BASE = f"http://{ROBOT_IP}:60010"
-SSH_USER = "root"
 
 
 class RobotClient:
@@ -20,8 +19,7 @@ class RobotClient:
     def __init__(self, ip=ROBOT_IP):
         self.ip = ip
         self.api_base = f"http://{ip}:60010"
-        self.ssh_target = f"{SSH_USER}@{ip}"
-
+        
     # ── HTTP API ──
 
     def _api_get(self, path, params=None):
@@ -59,38 +57,6 @@ class RobotClient:
         """语音播报"""
         return self._api_get("/skill-tts-chinese", {"content": content})
 
-    # ── SSH 指令 ──
-
-    def _ssh_exec(self, cmd):
-        full_cmd = ["ssh", self.ssh_target, cmd]
-        print(f"🔧 SSH: {cmd}")
-        result = subprocess.run(full_cmd, capture_output=True, text=True, timeout=30)
-        output = result.stdout.strip()
-        if result.returncode != 0 and result.stderr:
-            print(f"⚠️ stderr: {result.stderr.strip()}")
-        print(f"✅ 返回: {output}")
-        return output
-
-    def restart_chess(self):
-        """恢复下棋"""
-        return self._ssh_exec("/etc/init.d/bi-app-sensechess restart")
-
-    def stop_chess(self):
-        """停止下棋"""
-        return self._ssh_exec("kkill proce sense")
-
-    def stop_monitor(self):
-        """停止监控"""
-        return self._ssh_exec("kkill proce monitor")
-
-    def robot_mcu(self, x, y, action):
-        """底层机械臂控制 (action: 0=移动 1=取子 2=落子)"""
-        cmd = f"robotMcu -- 0x11 0x12 {x} {y} 255 {action} 0 0"
-        return self._ssh_exec(cmd)
-
-    def set_expression(self, number):
-        """表情控制 (需先 stop_chess)"""
-        return self._ssh_exec(f"media_service start_play_animation {number}")
 
     # ── 复合操作 ──
 

@@ -57,8 +57,6 @@ GET http://192.168.199.10:60010/skill-move-tcp?x=6&y=6&action=2
 GET http://192.168.199.10:60010/skill-tts-chinese?content=你好
 ```
 
----
-
 ### 1.7 表情控制
 
 - **URL**: `GET 'http://192.168.199.10:60010/skill-show-emotion?code=008'`
