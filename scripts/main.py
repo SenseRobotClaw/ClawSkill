@@ -104,19 +104,8 @@ def cmd_home(args):
 def cmd_tts(args):
     RobotClient().tts(args.content)
 
-def cmd_expression(args):
-    client = RobotClient()
-    client.stop_chess()
-    client.set_expression(args.number)
-
 def cmd_pick(args):
     RobotClient().pick_with_retry(box=args.box)
-
-def cmd_restart(args):
-    RobotClient().restart_chess()
-
-def cmd_stop(args):
-    RobotClient().stop_chess()
 
 
 def main():
@@ -126,8 +115,6 @@ def main():
     sub.add_parser("look", help="查看棋盘状态")
     sub.add_parser("clean", help="清理棋盘")
     sub.add_parser("home", help="复位机械臂")
-    sub.add_parser("restart", help="恢复下棋")
-    sub.add_parser("stop", help="停止下棋")
 
     p = sub.add_parser("place", help="落子")
     p.add_argument("x", type=float, help="横坐标")
@@ -145,8 +132,8 @@ def main():
     args = parser.parse_args()
     cmds = {
         "look": cmd_look, "place": cmd_place, "clean": cmd_clean,
-        "home": cmd_home, "tts": cmd_tts, "expression": cmd_expression,
-        "pick": cmd_pick, "restart": cmd_restart, "stop": cmd_stop,
+        "home": cmd_home, "tts": cmd_tts, 
+        "pick": cmd_pick, 
     }
     cmds[args.command](args)
 
