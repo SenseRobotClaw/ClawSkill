@@ -22,14 +22,18 @@ class RobotClient:
         
     # ── HTTP API ──
 
-    def _api_get(self, path, params=None):
+    def _api_get(self, path, params=None, binary=False):
         url = f"{self.api_base}{path}"
         if params:
             url += "?" + urllib.parse.urlencode(params)
         print(f"📡 GET {url}")
         req = urllib.request.Request(url)
         with urllib.request.urlopen(req, timeout=30) as resp:
-            body = resp.read().decode("utf-8")
+            data = resp.read()
+            if binary:
+                print(f"✅ 响应: [Binary Data] {len(data)} bytes")
+                return data
+            body = data.decode("utf-8")
             print(f"✅ 响应: {body[:500]}")
             return body
 
@@ -45,9 +49,11 @@ class RobotClient:
         """取落子控制 (action: 0=移动 1=取子 2=落子)"""
         return self._api_get("/skill-move-tcp", {"x": x, "y": y, "action": action})
 
-    def catch_box(self):
-        """自由取子（CV能力）"""
-        return self._api_get("/skill-catch-box")
+    def catch_box(self, color=0):
+        """自由取子（CV能力）
+        color: 0=任意, 1=黑子, 2=白子
+        """
+        return self._api_get("/skill-catch-box", {"color": color})
 
     def clean_board(self):
         """清理棋盘"""
@@ -56,6 +62,18 @@ class RobotClient:
     def tts(self, content):
         """语音播报"""
         return self._api_get("/skill-tts-chinese", {"content": content})
+
+    def show_emotion(self, code):
+        """显示表情"""
+        return self._api_get("/skill-show-emotion", {"code": code})
+
+    def take_photo(self, camera_id):
+        """拍照 (0=前置 1=右边 2=左边)"""
+        return self._api_get("/skill-take-photo", {"id": camera_id}, binary=True)
+
+    def record(self, code):
+        """录音 (0=开始 1=结束)"""
+        return self._api_get("/skill-record", {"code": code}, binary=(code == 1))
 
 
     # ── 复合操作 ──
@@ -70,7 +88,7 @@ class RobotClient:
         for attempt in range(max_retries + 1):
             x = base_x + random.uniform(-0.5, 0.5) * (1 if attempt > 0 else 0)
             y = base_y + random.uniform(-0.5, 0.5) * (1 if attempt > 0 else 0)
-            result = self.robot_mcu(round(x, 1), round(y, 1), 1)
+            result = self.move_tcp(round(x, 1), round(y, 1), 1)
             if result.strip() == "0":
                 print(f"✅ 取子成功 (第{attempt + 1}次)")
                 return True
@@ -107,6 +125,29 @@ def cmd_tts(args):
 def cmd_pick(args):
     RobotClient().pick_with_retry(box=args.box)
 
+def cmd_catch(args):
+    RobotClient().catch_box(color=args.color)
+
+def cmd_expression(args):
+    RobotClient().show_emotion(args.code)
+
+def cmd_photo(args):
+    data = RobotClient().take_photo(args.id)
+    filename = f"photo_{args.id}.jpg"
+    with open(filename, "wb") as f:
+        f.write(data)
+    print(f"✅ 照片已保存: {filename}")
+
+def cmd_record(args):
+    if args.action == "start":
+        RobotClient().record(0)
+    elif args.action == "stop":
+        data = RobotClient().record(1)
+        filename = "record.pcm"
+        with open(filename, "wb") as f:
+            f.write(data)
+        print(f"✅ 录音已保存: {filename}")
+
 
 def main():
     parser = argparse.ArgumentParser(description="元萝卜下棋机器人控制")
@@ -124,16 +165,26 @@ def main():
     p.add_argument("content", help="播报内容")
 
     p = sub.add_parser("expression", help="表情控制")
-    p.add_argument("number", help="表情编号 (002=快乐 003=哭 004=默认 008=兴趣)")
+    p.add_argument("code", help="表情编号 (002=快乐 003=哭 004=默认 008=兴趣)")
 
-    p = sub.add_parser("pick", help="从棋盒取子")
+    p = sub.add_parser("pick", help="从棋盒取子(盲取)")
     p.add_argument("--box", choices=["left", "right"], default="right", help="棋盒选择")
+
+    p = sub.add_parser("catch", help="从棋盒取子(CV)")
+    p.add_argument("--color", type=int, choices=[0, 1, 2], default=0, help="0=任意 1=黑 2=白")
+
+    p = sub.add_parser("photo", help="拍照")
+    p.add_argument("id", type=int, choices=[0, 1, 2], help="摄像头ID (0=前置 1=右 2=左)")
+
+    p = sub.add_parser("record", help="录音")
+    p.add_argument("action", choices=["start", "stop"], help="start=开始 stop=结束并保存")
 
     args = parser.parse_args()
     cmds = {
         "look": cmd_look, "place": cmd_place, "clean": cmd_clean,
         "home": cmd_home, "tts": cmd_tts, 
-        "pick": cmd_pick, 
+        "pick": cmd_pick, "catch": cmd_catch,
+        "expression": cmd_expression, "photo": cmd_photo, "record": cmd_record
     }
     cmds[args.command](args)
 

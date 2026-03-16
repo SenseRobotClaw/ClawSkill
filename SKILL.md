@@ -53,7 +53,7 @@ metadata: {"clawdbot":{"emoji":"🤖","requires":{"bins":["curl"],"env":[]},"pri
 curl --location 'http://192.168.199.10:60010/skill-look-board'
 
 # 2. 从棋盒取子（使用CV能力精准取子）
-curl --location 'http://192.168.199.10:60010/skill-catch-box？color=0'
+curl --location 'http://192.168.199.10:60010/skill-catch-box?color=0'
 
 # 3. 移动到目标位置并落子
 curl --location 'http://192.168.199.10:60010/skill-move-tcp?x=6&y=6&action=2'
@@ -98,6 +98,22 @@ curl --location 'http://192.168.199.10:60010/skill-look-board'
 curl --location 'http://192.168.199.10:60010/skill-clean-board'
 ```
 
+### 流程六：拍照
+
+```bash
+# id: 0=前置 1=右边 2=左边
+curl --location 'http://192.168.199.10:60010/skill-take-photo?id=0'
+```
+
+### 流程七：录音
+
+```bash
+# 开始录音
+curl --location 'http://192.168.199.10:60010/skill-record?code=0'
+# 结束录音
+curl --location 'http://192.168.199.10:60010/skill-record?code=1'
+```
+
 ## 控制指令速查表
 
 ### HTTP API 指令
@@ -109,8 +125,10 @@ curl --location 'http://192.168.199.10:60010/skill-clean-board'
 | 语音播报 | GET | `http://192.168.199.10:60010/skill-tts-chinese?content=中文` |
 | 看棋盘状态 | GET | `http://192.168.199.10:60010/skill-look-board` |
 | 清理棋盘 | GET | `http://192.168.199.10:60010/skill-clean-board` |
-| 自由取子 | GET | `http://192.168.199.10:60010/skill-catch-box` |
+| 自由取子 | GET | `http://192.168.199.10:60010/skill-catch-box?color=0` |
 | 显示表情 | GET | `http://192.168.199.10:60010/skill-show-emotion?code=008` |
+| 拍照 | GET | `http://192.168.199.10:60010/skill-take-photo?id=0` |
+| 录音 | GET | `http://192.168.199.10:60010/skill-record?code=0` |
 
 ## 错误处理
 
