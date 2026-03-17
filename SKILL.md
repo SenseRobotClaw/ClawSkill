@@ -13,9 +13,8 @@ metadata: {"clawdbot":{"emoji":"🤖","requires":{"bins":["curl"],"env":[]},"pri
 
 **你必须严格遵守以下规则，不得违反：**
 
-1. **每次操作前必须先查看棋盘状态。** 在执行任何自由取子、清理棋盘等操作前，必须先调用"看当前棋盘状态"指令。
-2. **自由取子失败必须重试。** 棋盒自由取子时，如果取子不成功，请在当前位置随机偏移 0.1～0.8 步长再次取子，至多重复 3 次。
-3. **使用本 SKILL 提供的指令控制机器人。**   通过使用文档中定义的 HTTP API 组合，让机器人完成复杂任务。
+1. **取子失败必须重试。** 从棋盒取子时，如果取子不成功，请在当前位置随机偏移 0.1～0.8 步长再次取子，至多重复 3 次。
+2. **使用本 SKILL 提供的指令控制机器人。**   通过使用文档中定义的 HTTP API 组合，让机器人完成复杂任务。
 
 ## 🔒 连接与安全说明
 
@@ -49,17 +48,17 @@ metadata: {"clawdbot":{"emoji":"🤖","requires":{"bins":["curl"],"env":[]},"pri
 ### 流程一：取子并落子（最常见场景）
 
 ```bash
-# 1. 查看当前棋盘状态（必须先执行）
-curl --location 'http://192.168.199.10:60010/skill-look-board'
+# 1. 查找棋盒棋子
+curl --location 'http://192.168.199.10:60010/skill-detect-box'
 
-# 2. 从棋盒取子（使用CV能力精准取子）
-curl --location 'http://192.168.199.10:60010/skill-catch-box?color=0'
+# 2. 解析出目标棋子坐标后，移动并取子 (action=1)
+curl --location 'http://192.168.199.10:60010/skill-move-tcp?x=-3.1&y=1.5&action=1'
 
-# 3. 移动到目标位置并落子
+# 3. 移动到目标位置并落子 (action=2)
 curl --location 'http://192.168.199.10:60010/skill-move-tcp?x=6&y=6&action=2'
 ```
 
-### 流程二：棋盒自由取子（带重试）
+### 流程二：盲取棋子（带重试）
 
 在某棋盒中随机位置取一个子：
 - 如果取子成功，执行后续操作
@@ -98,20 +97,33 @@ curl --location 'http://192.168.199.10:60010/skill-look-board'
 curl --location 'http://192.168.199.10:60010/skill-clean-board'
 ```
 
-### 流程六：拍照
+### 流程六：查找棋盒棋子
 
 ```bash
-# id: 0=前置 1=右边 2=左边
+# 返回棋子坐标数组
+curl --location 'http://192.168.199.10:60010/skill-detect-box'
+```
+
+### 流程七：拍照
+
+```bash
+# id: 0=前置, 1=右边, 2=左边
 curl --location 'http://192.168.199.10:60010/skill-take-photo?id=0'
 ```
 
-### 流程七：录音
+### 流程八：录音
 
 ```bash
 # 开始录音
 curl --location 'http://192.168.199.10:60010/skill-record?code=0'
 # 结束录音
 curl --location 'http://192.168.199.10:60010/skill-record?code=1'
+```
+
+### 流程九：显示图片
+
+```bash
+curl --location 'http://192.168.199.10:60010/skill-show-image' --form 'image=@"/path/to/image.png"'
 ```
 
 ## 控制指令速查表
@@ -125,10 +137,12 @@ curl --location 'http://192.168.199.10:60010/skill-record?code=1'
 | 语音播报 | GET | `http://192.168.199.10:60010/skill-tts-chinese?content=中文` |
 | 看棋盘状态 | GET | `http://192.168.199.10:60010/skill-look-board` |
 | 清理棋盘 | GET | `http://192.168.199.10:60010/skill-clean-board` |
-| 自由取子 | GET | `http://192.168.199.10:60010/skill-catch-box?color=0` |
+| 查找棋子 | GET | `http://192.168.199.10:60010/skill-detect-box` |
 | 显示表情 | GET | `http://192.168.199.10:60010/skill-show-emotion?code=008` |
 | 拍照 | GET | `http://192.168.199.10:60010/skill-take-photo?id=0` |
 | 录音 | GET | `http://192.168.199.10:60010/skill-record?code=0` |
+| 停止录音 | GET | `http://192.168.199.10:60010/skill-record?code=1` |
+| 显示图片 | POST | `http://192.168.199.10:60010/skill-show-image` |
 
 ## 错误处理
 
@@ -140,6 +154,5 @@ curl --location 'http://192.168.199.10:60010/skill-record?code=1'
 
 ## 关键注意事项
 
-- **操作前必须先查看棋盘状态**（调用 `skill-look-board`）
 - 棋盘坐标范围：x ∈ [0, 12]，y ∈ [0, 12]
 - 取子失败时自动重试，随机偏移 0.1～0.8  步长，最多 3 次

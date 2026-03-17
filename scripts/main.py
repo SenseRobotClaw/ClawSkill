@@ -49,11 +49,12 @@ class RobotClient:
         """取落子控制 (action: 0=移动 1=取子 2=落子)"""
         return self._api_get("/skill-move-tcp", {"x": x, "y": y, "action": action})
 
-    def catch_box(self, color=0):
-        """自由取子（CV能力）
-        color: 0=任意, 1=黑子, 2=白子
+    def detect_box(self):
+        """查找棋盒棋子的位置
+        returns: json array, e.g. [{"color":1,"x":-3.1,"y":1.5}]
         """
-        return self._api_get("/skill-catch-box", {"color": color})
+        data = self._api_get("/skill-detect-box")
+        return json.loads(data)
 
     def clean_board(self):
         """清理棋盘"""
@@ -66,6 +67,23 @@ class RobotClient:
     def show_emotion(self, code):
         """显示表情"""
         return self._api_get("/skill-show-emotion", {"code": code})
+
+    def show_image(self, image_path):
+        """显示图片"""
+        # Using curl for multipart/form-data upload as it's simpler and more robust
+        # than manual multipart construction in standard library without requests
+        url = f"{self.api_base}/skill-show-image"
+        print(f"📡 POST {url} image={image_path}")
+        
+        try:
+            # Use curl to upload the file
+            cmd = ['curl', '--location', url, '--form', f'image=@"{image_path}"']
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            print(f"✅ 响应: {result.stdout[:500]}")
+            return result.stdout
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Curl failed: {e.stderr}")
+            return ""
 
     def take_photo(self, camera_id):
         """拍照 (0=前置 1=右边 2=左边)"""
@@ -97,10 +115,8 @@ class RobotClient:
         return False
 
     def place_stone(self, x, y):
-        """完整落子流程：看棋盘 → 取子 → 移动 → 落子"""
+        """完整落子流程：移动 → 落子"""
         print(f"🎯 落子到 ({x}, {y})")
-        self.look_board()
-        self.catch_box()
         self.move_tcp(x, y, 2)
         print("✅ 落子完成")
 
@@ -124,9 +140,6 @@ def cmd_tts(args):
 
 def cmd_pick(args):
     RobotClient().pick_with_retry(box=args.box)
-
-def cmd_catch(args):
-    RobotClient().catch_box(color=args.color)
 
 def cmd_expression(args):
     RobotClient().show_emotion(args.code)
@@ -170,21 +183,25 @@ def main():
     p = sub.add_parser("pick", help="从棋盒取子(盲取)")
     p.add_argument("--box", choices=["left", "right"], default="right", help="棋盒选择")
 
-    p = sub.add_parser("catch", help="从棋盒取子(CV)")
-    p.add_argument("--color", type=int, choices=[0, 1, 2], default=0, help="0=任意 1=黑 2=白")
-
     p = sub.add_parser("photo", help="拍照")
     p.add_argument("id", type=int, choices=[0, 1, 2], help="摄像头ID (0=前置 1=右 2=左)")
 
     p = sub.add_parser("record", help="录音")
     p.add_argument("action", choices=["start", "stop"], help="start=开始 stop=结束并保存")
 
+    p = sub.add_parser("detect", help="查找棋盒棋子")
+    
+    p = sub.add_parser("show_image", help="显示图片")
+    p.add_argument("path", help="图片路径 (仅支持PNG)")
+
     args = parser.parse_args()
     cmds = {
         "look": cmd_look, "place": cmd_place, "clean": cmd_clean,
         "home": cmd_home, "tts": cmd_tts, 
-        "pick": cmd_pick, "catch": cmd_catch,
-        "expression": cmd_expression, "photo": cmd_photo, "record": cmd_record
+        "pick": cmd_pick,
+        "expression": cmd_expression, "photo": cmd_photo, "record": cmd_record,
+        "detect": lambda a: print(json.dumps(RobotClient().detect_box(), indent=2)),
+        "show_image": lambda a: RobotClient().show_image(a.path)
     }
     cmds[args.command](args)
 
