@@ -25,7 +25,7 @@ class RobotClient:
     def _api_get(self, path, params=None, binary=False):
         url = f"{self.api_base}{path}"
         if params:
-            url += "?" + urllib.parse.urlencode(params)
+            url += "?" + urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
         print(f"📡 GET {url}")
         req = urllib.request.Request(url)
         with urllib.request.urlopen(req, timeout=30) as resp:
@@ -96,29 +96,41 @@ class RobotClient:
 
     # ── 复合操作 ──
 
-    def pick_with_retry(self, box="right", max_retries=3):
-        """从棋盒取子，失败自动重试（偏移0.5步长）"""
-        if box == "right":
-            base_x, base_y = random.uniform(-3.8, -1.8), random.uniform(0, 7)
-        else:
-            base_x, base_y = random.uniform(14.2, 15.8), random.uniform(0, 7)
+    def pick_with_retry(self):
+        """从棋盒智能取子（CV检测 + 缓存重试）"""
+        pieces = self.detect_box()
+        if not pieces:
+            print("⚠️ 未检测到棋子")
+            pieces = []
 
-        for attempt in range(max_retries + 1):
-            x = base_x + random.uniform(-0.5, 0.5) * (1 if attempt > 0 else 0)
-            y = base_y + random.uniform(-0.5, 0.5) * (1 if attempt > 0 else 0)
-            result = self.move_tcp(round(x, 1), round(y, 1), 1)
-            if result.strip() == "0":
-                print(f"✅ 取子成功 (第{attempt + 1}次)")
+        cached_pieces = list(pieces)
+        while cached_pieces:
+            piece = cached_pieces.pop(0)  # 无论成功失败，都从缓存中移除该位置
+            base_x = piece.get("x", 0)
+            base_y = piece.get("y", 0)
+
+            x = round(base_x, 3)
+            y = round(base_y, 3)
+
+            result = self.move_tcp(x, y, 1)
+            if result.strip() == "0" or "ret:0" in result:
+                print("✅ 取子成功")
                 return True
-            print(f"⚠️ 取子失败 (第{attempt + 1}次)，重试中...")
-        print("❌ 取子失败，已达最大重试次数")
+            print("⚠️ 取子失败，使用缓存的下个位置重试...")
+
+        print("❌ 取子失败，请整理棋盒或放入新棋子")
+        self.tts("取子失败，请整理棋盒或放入新棋子")
         return False
 
     def place_stone(self, x, y):
         """完整落子流程：移动 → 落子"""
         print(f"🎯 落子到 ({x}, {y})")
-        self.move_tcp(x, y, 2)
-        print("✅ 落子完成")
+        result = self.move_tcp(x, y, 2)
+        if result.strip() == "0" or "ret:0" in result:
+            print("✅ 落子完成")
+            return True
+        print(f"❌ 落子失败: {result.strip()}")
+        return False
 
 
 # ── CLI ──
@@ -139,7 +151,7 @@ def cmd_tts(args):
     RobotClient().tts(args.content)
 
 def cmd_pick(args):
-    RobotClient().pick_with_retry(box=args.box)
+    RobotClient().pick_with_retry()
 
 def cmd_expression(args):
     RobotClient().show_emotion(args.code)
@@ -180,8 +192,7 @@ def main():
     p = sub.add_parser("expression", help="表情控制")
     p.add_argument("code", help="表情编号 (002=快乐 003=哭 004=默认 008=兴趣)")
 
-    p = sub.add_parser("pick", help="从棋盒取子(盲取)")
-    p.add_argument("--box", choices=["left", "right"], default="right", help="棋盒选择")
+    sub.add_parser("pick", help="从棋盒取子(智能取子)")
 
     p = sub.add_parser("photo", help="拍照")
     p.add_argument("id", type=int, choices=[0, 1, 2], help="摄像头ID (0=前置 1=右 2=左)")
