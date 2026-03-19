@@ -120,18 +120,25 @@ curl --location 'http://192.168.199.10:60010/skill-clean-board'
 ### 流程六：查找棋盒棋子
 
 ```bash
-# 返回包含棋子坐标数组的 JSON 对象
+# 返回包含棋子坐标数组的 JSON 对象，其中 color 1=黑, 2=白
 curl --location 'http://192.168.199.10:60010/skill-detect-box'
 ```
 
-### 流程七：拍照
+### 流程七：查找棋盘棋子
+
+```bash
+# 返回包含棋盘上棋子坐标数组的 JSON 对象，其中 color 1=黑, 2=白
+curl --location 'http://192.168.199.10:60010/skill-detect-board'
+```
+
+### 流程八：拍照
 
 ```bash
 # id: 0=前置, 1=右边, 2=左边
 curl --location 'http://192.168.199.10:60010/skill-take-photo?id=0'
 ```
 
-### 流程八：录音
+### 流程九：录音
 
 ```bash
 # 开始录音
@@ -140,7 +147,7 @@ curl --location 'http://192.168.199.10:60010/skill-record?code=0'
 curl --location 'http://192.168.199.10:60010/skill-record?code=1'
 ```
 
-### 流程九：显示图片
+### 流程十：显示图片
 
 ```bash
 curl --location 'http://192.168.199.10:60010/skill-show-image' --form 'image=@"/path/to/image.png"'
@@ -157,7 +164,8 @@ curl --location 'http://192.168.199.10:60010/skill-show-image' --form 'image=@"/
 | 语音播报 | GET | `http://192.168.199.10:60010/skill-tts-chinese?content=中文` |
 | 看棋盘状态 | GET | `http://192.168.199.10:60010/skill-look-board` |
 | 清理棋盘 | GET | `http://192.168.199.10:60010/skill-clean-board` |
-| 查找棋子 | GET | `http://192.168.199.10:60010/skill-detect-box` |
+| 查找棋盒棋子 | GET | `http://192.168.199.10:60010/skill-detect-box` |
+| 查找棋盘棋子 | GET | `http://192.168.199.10:60010/skill-detect-board` |
 | 显示表情 | GET | `http://192.168.199.10:60010/skill-show-emotion?code=008` |
 | 拍照 | GET | `http://192.168.199.10:60010/skill-take-photo?id=0` |
 | 录音 | GET | `http://192.168.199.10:60010/skill-record?code=0` |

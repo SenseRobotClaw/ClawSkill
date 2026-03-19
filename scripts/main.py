@@ -51,9 +51,22 @@ class RobotClient:
 
     def detect_box(self):
         """查找棋盒棋子的位置
-        returns: list of pieces, e.g. [{"color":1,"x":-3.1,"y":1.5}]
+        returns: list of pieces, e.g. [{"color":1,"x":-3.1,"y":1.5}] (color 1=黑, 2=白)
         """
         data = self._api_get("/skill-detect-box")
+        try:
+            res = json.loads(data)
+            if res.get("ok") and res.get("result") == "success":
+                return res.get("pieces", [])
+        except json.JSONDecodeError:
+            pass
+        return []
+
+    def detect_board(self):
+        """查找棋盘棋子的位置
+        returns: list of pieces, e.g. [{"color":1,"x":3,"y":4}] (color 1=黑, 2=白)
+        """
+        data = self._api_get("/skill-detect-board")
         try:
             res = json.loads(data)
             if res.get("ok") and res.get("result") == "success":
@@ -213,6 +226,13 @@ def cmd_record(args):
         print(f"✅ 录音已保存: {filename}")
 
 
+def cmd_detect(args):
+    client = RobotClient()
+    if args.board:
+        print(json.dumps(client.detect_board(), indent=2))
+    else:
+        print(json.dumps(client.detect_box(), indent=2))
+
 def main():
     parser = argparse.ArgumentParser(description="元萝卜下棋机器人控制")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -240,6 +260,7 @@ def main():
     p.add_argument("action", choices=["start", "stop"], help="start=开始 stop=结束并保存")
 
     p = sub.add_parser("detect", help="查找棋盒棋子")
+    p.add_argument("--board", action="store_true", help="查找棋盘上的棋子而不是棋盒")
     
     p = sub.add_parser("show_image", help="显示图片")
     p.add_argument("path", help="图片路径 (仅支持PNG)")
@@ -250,7 +271,7 @@ def main():
         "home": cmd_home, "tts": cmd_tts, 
         "pick": cmd_pick,
         "expression": cmd_expression, "photo": cmd_photo, "record": cmd_record,
-        "detect": lambda a: print(json.dumps(RobotClient().detect_box(), indent=2)),
+        "detect": cmd_detect,
         "show_image": lambda a: RobotClient().show_image(a.path)
     }
     cmds[args.command](args)

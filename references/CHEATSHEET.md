@@ -13,7 +13,8 @@ API: http://192.168.199.10:60010
 | 看棋盘 | `curl 'http://192.168.199.10:60010/skill-look-board'` |
 | 复位机械臂 | `curl 'http://192.168.199.10:60010/skill-move-home'` |
 | 取落子 | `curl 'http://192.168.199.10:60010/skill-move-tcp?x=X&y=Y&action=N'` |
-| 查找棋子 | `curl 'http://192.168.199.10:60010/skill-detect-box'` |
+| 查找棋盒棋子 | `curl 'http://192.168.199.10:60010/skill-detect-box'` |
+| 查找棋盘棋子 | `curl 'http://192.168.199.10:60010/skill-detect-board'` |
 | 清理棋盘 | `curl 'http://192.168.199.10:60010/skill-clean-board'` (需轮询判断 result: running/done) |
 | 语音播报 | `curl 'http://192.168.199.10:60010/skill-tts-chinese?content=TEXT'` |
 | 显示表情 | `curl 'http://192.168.199.10:60010/skill-show-emotion?code=008'` |
@@ -21,8 +22,9 @@ API: http://192.168.199.10:60010
 | 录音 | `curl 'http://192.168.199.10:60010/skill-record?code=0'` |
 | 显示图片 | `curl 'http://192.168.199.10:60010/skill-show-image' -F 'image=@/path'` |
 
-## 动作 action
-action: 0=移动 1=取子 2=落子
+## 动作与颜色参数
+- **action**: 0=移动 1=取子 2=落子
+- **color**: 1=黑 2=白
 
 ## 表情编号 code
 
