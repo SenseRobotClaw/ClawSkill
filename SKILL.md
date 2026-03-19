@@ -15,7 +15,7 @@ metadata: {"clawdbot":{"emoji":"🤖","requires":{"bins":["curl"],"env":[]},"pri
 
 1. **取子失败必须重试。** 从棋盒取子时，如果取子不成功，请使用缓存中的下一个棋子位置进行重试。
 2. **使用本 SKILL 提供的指令控制机器人。**   通过使用文档中定义的 HTTP API 组合，让机器人完成复杂任务。
-3. **必须先吸子成功再落子。** 只有当 `skill-move-tcp` 执行 `action=1` 返回成功（`ret:0`）后，才允许执行 `action=2` 落子，否则会出现 `ret:24`（未吸子却落子）。
+3. **必须先吸子成功再落子。** 只有当 `skill-move-tcp` 执行 `action=1` 返回成功（`"result": "success"`）后，才允许执行 `action=2` 落子，否则会出现 `"result": "empty_put"`（未吸子却落子）。
 
 ## 🔒 连接与安全说明
 
@@ -110,15 +110,17 @@ curl --location 'http://192.168.199.10:60010/skill-tts-chinese?content=你好'
 
 ### 流程五：清理棋盘
 
+把棋盘上的子收回棋盒。由于清理过程可能需要几分钟，此接口为异步调用，需要通过轮询该接口并判断返回的 `result` 字段来获取清理进度（`running`、`done` 或 `error`）。
+
 ```bash
-curl --location 'http://192.168.199.10:60010/skill-look-board'
+# 轮询调用，直到 result 变为 done 或 error
 curl --location 'http://192.168.199.10:60010/skill-clean-board'
 ```
 
 ### 流程六：查找棋盒棋子
 
 ```bash
-# 返回棋子坐标数组
+# 返回包含棋子坐标数组的 JSON 对象
 curl --location 'http://192.168.199.10:60010/skill-detect-box'
 ```
 

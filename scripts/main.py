@@ -51,14 +51,26 @@ class RobotClient:
 
     def detect_box(self):
         """查找棋盒棋子的位置
-        returns: json array, e.g. [{"color":1,"x":-3.1,"y":1.5}]
+        returns: list of pieces, e.g. [{"color":1,"x":-3.1,"y":1.5}]
         """
         data = self._api_get("/skill-detect-box")
-        return json.loads(data)
+        try:
+            res = json.loads(data)
+            if res.get("ok") and res.get("result") == "success":
+                return res.get("pieces", [])
+        except json.JSONDecodeError:
+            pass
+        return []
 
     def clean_board(self):
-        """清理棋盘"""
-        return self._api_get("/skill-clean-board")
+        """清理棋盘 (异步调用，返回任务状态)
+        返回包含 result (running/done/error) 和 detail 的 JSON 对象
+        """
+        data = self._api_get("/skill-clean-board")
+        try:
+            return json.loads(data)
+        except json.JSONDecodeError:
+            return {"result": "error", "detail": "Invalid JSON response"}
 
     def tts(self, content):
         """语音播报"""
@@ -113,7 +125,13 @@ class RobotClient:
             y = round(base_y, 3)
 
             result = self.move_tcp(x, y, 1)
-            if result.strip() == "0" or "ret:0" in result:
+            try:
+                res_json = json.loads(result)
+                is_success = res_json.get("ok") and res_json.get("result") == "success"
+            except json.JSONDecodeError:
+                is_success = "0" in result or "ret:0" in result
+
+            if is_success:
                 print("✅ 取子成功")
                 return True
             print("⚠️ 取子失败，使用缓存的下个位置重试...")
@@ -126,7 +144,13 @@ class RobotClient:
         """完整落子流程：移动 → 落子"""
         print(f"🎯 落子到 ({x}, {y})")
         result = self.move_tcp(x, y, 2)
-        if result.strip() == "0" or "ret:0" in result:
+        try:
+            res_json = json.loads(result)
+            is_success = res_json.get("ok") and res_json.get("result") == "success"
+        except json.JSONDecodeError:
+            is_success = "0" in result or "ret:0" in result
+
+        if is_success:
             print("✅ 落子完成")
             return True
         print(f"❌ 落子失败: {result.strip()}")
@@ -142,7 +166,22 @@ def cmd_place(args):
     RobotClient().place_stone(args.x, args.y)
 
 def cmd_clean(args):
-    RobotClient().clean_board()
+    import time
+    print("开始清理棋盘任务...")
+    while True:
+        res = RobotClient().clean_board()
+        status = res.get("result", "error")
+        detail = res.get("detail", "")
+        
+        if status == "running":
+            print(f"⏳ {detail} (等待 10 秒后查询...)")
+            time.sleep(10)
+        elif status == "done":
+            print(f"✅ 清理完成: {detail}")
+            break
+        else:
+            print(f"❌ 清理异常: {detail}")
+            break
 
 def cmd_home(args):
     RobotClient().move_home()

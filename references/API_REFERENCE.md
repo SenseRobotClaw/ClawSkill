@@ -7,143 +7,238 @@
 
 ---
 
-## 一、HTTP API 接口
+## 📐 坐标系统
 
-### 1.1 查看棋盘状态
+### 1. 棋盘坐标 (x, y)
 
-- **URL**: `GET http://192.168.199.10:60010/skill-look-board`
-- **说明**: 进行棋盘分类和定位。
+| 位置 | 坐标 |
+| :--- | :--- |
+| **右上角** | `(0, 0)` |
+| **左下角** | `(12, 12)` |
 
-### 1.2 取落子控制
+### 2. 棋盒坐标 (x, y)
 
-- **URL**: `GET http://192.168.199.10:60010/skill-move-tcp`
+| 棋盒 | 右上角 | 左下角 |
+| :--- | :--- | :--- |
+| **右棋盒** | `(-3.8, 0)` | `(-1.8, 7)` |
+| **左棋盒** | `(14.2, 0)` | `(15.8, 7)` |
 
-| 查询参数 | 类型 | 说明 |
-|----------|------|------|
-| x | number | 横坐标 |
-| y | number | 纵坐标 |
-| action | integer | 0=移动、1=取子、2=落子 |
+## 📡 指令控制方式
 
-示例：
-```
-GET http://192.168.199.10:60010/skill-move-tcp?x=6&y=6&action=2
-```
+该机器人系统运行 Linux，内部搭建了 HTTP Server。你可以通过 `curl` 访问该元萝卜机器人，调用对应的控制指令。
 
-### 1.3 复位机械臂
+- **基础地址**: `http://192.168.199.10:60010`
 
-- **URL**: `GET http://192.168.199.10:60010/skill-move-home`
-- **说明**: 将机械臂归位到初始位置
+---
 
-### 1.4 清理棋盘
+## 🛠️ 具体功能指令
 
-- **URL**: `GET http://192.168.199.10:60010/skill-clean-board`
-- **说明**: 把棋盘上的子收回棋盒
+### 1. 机械臂复位
 
-### 1.5 语音播报
+将机械臂从棋盘上移开。
 
-- **URL**: `GET http://192.168.199.10:60010/skill-tts-chinese`
+- **指令**:
+  ```bash
+  curl --location 'http://192.168.199.10:60010/skill-move-home'
+  ```
+- **参数**: 无
+- **返回值**:
+  ```json
+  {
+      "ok": true,
+      "cmd": "skill-move-home",
+      "result": "success|fail"
+  }
+  ```
 
-| 查询参数 | 类型 | 说明 |
-|----------|------|------|
-| content | string | 要播报的中文内容 |
+### 2. 机械臂控制
 
-示例：
-```
-GET http://192.168.199.10:60010/skill-tts-chinese?content=你好
-```
+操作机械臂到指定的 `x` 和 `y` 坐标位置去执行某一个 `action` 的动作。
 
-### 1.6 查找棋盒棋子
+- **指令**:
+  ```bash
+  curl --location 'http://192.168.199.10:60010/skill-move-tcp?x={x}&y={y}&action={action}'
+  ```
+- **参数**:
+    - `x`: 横坐标
+    - `y`: 纵坐标
+    - `action`: 机械臂具体动作（`0`: 移动, `1`: 取子, `2`: 落子）
+- **返回值**:
+  ```json
+  {
+      "ok": true,
+      "cmd": "skill-move-tcp",
+      "result": "success|empty_put|catch_fail|full_catch|out_of_range|collision|fail_xxx",
+      "x": 6,
+      "y": 4,
+      "action": 2
+  }
+  ```
 
-- **URL**: `GET http://192.168.199.10:60010/skill-detect-box`
-- **说明**: 使用 CV 能力检测棋盒中棋子的位置
-- **返回值**: JSON数组
-  - 成功: `[{"color":1, "x":-3.13, "y":1.56}, ...]`
-  - 失败: `[]`
+### 3. 语音播报
 
-### 1.7 表情控制
+控制机器人将 `content` 转为语音进行播放。
 
-- **URL**: `GET http://192.168.199.10:60010/skill-show-emotion?code=008`
+- **指令**:
+  ```bash
+  curl --location 'http://192.168.199.10:60010/skill-tts-chinese?content={content}'
+  ```
+- **参数**:
+    - `content`: 仅限中文内容
+- **返回值**:
+  ```json
+  {
+      "ok": true,
+      "cmd": "skill-tts-chinese",
+      "result": "success|fail_empty_content"
+  }
+  ```
 
-| 查询参数 | 类型 | 说明 |
-|----------|------|------|
-| code | number | 表情编号 |
+### 4. 看当前棋盘状态
 
+进行棋盘分类和定位。**注意：在同一个棋盘下有且仅需要做一次。**
 
-- **说明**:
+- **指令**:
+  ```bash
+  curl --location 'http://192.168.199.10:60010/skill-look-board'
+  ```
+- **参数**: 无
+- **返回值**:
+  ```json
+  {
+      "ok": true,
+      "cmd": "skill-look-board",
+      "result": "GO_BOARD_9" // GO_BOARD_19, GO_BOARD_13, GO_BOARD_9, CHINESE_CHECKERS, INTERNATIONAL_CHECKERS_8, INTERNATIONAL_CHECKERS_10, CHINESE_CHESS, INTERNATIONAL_CHESS, NIEDAO_BOARD_19, NIEDAO_BOARD_15, GAME_NONE, GAME_NUM
+  }
+  ```
 
-| 编号 | 表情 |
-|------|------|
-| 002 | 快乐 |
-| 003 | 哭 |
-| 004 | 默认 |
-| 008 | 兴趣 |
-| 011 | 摇头轻快 |
-| 012 | 摇头否认 |
-| 013 | 消失 |
-| 014 | 出现 |
+### 5. 清理棋盘
 
+把棋盘上的子收回棋盒。由于清理过程可能需要几分钟，此接口为异步调用，客户端需要通过轮询该接口来获取清理进度。
 
-### 1.8 拍照
+- **指令**:
+  ```bash
+  curl --location 'http://192.168.199.10:60010/skill-clean-board'
+  ```
+- **参数**: 无
+- **返回值**:
+  ```json
+  {
+      "ok": true,
+      "cmd": "skill-clean-board",
+      "started_at": "2024-03-19 12:00:00",
+      "result": "running|done|error",
+      "detail": "清理棋盘任务已开始，预计耗时约 3-5 分钟"
+  }
+  ```
 
-- **URL**: `GET http://192.168.199.10:60010/skill-take-photo`
+### 6. 查找棋盒棋子的位置
+
+使用 CV 能力从棋盒中准确检测棋子的位置。
+
+- **指令**:
+  ```bash
+  curl --location 'http://192.168.199.10:60010/skill-detect-box'
+  ```
+- **参数**: 无
+- **返回值**:
+  ```json
+  {
+      "ok": true,
+      "cmd": "skill-detect-box",
+      "result": "success|fail_no_piece",
+      "pieces": [
+          {
+              "color": 1,
+              "x": -3.130963087081909,
+              "y": 1.56145179271698
+          }
+      ]
+  }
+  ```
+  *说明：`pieces` 数组中的 `color` 表示棋子颜色，`x` 和 `y` 表示在棋盘坐标系下的具体坐标。如果未检测到棋子，`ok` 为 `false`，`result` 为 `"fail_no_piece"`，`pieces` 为空数组 `[]`。*
+
+### 7. 显示表情
+
+控制机器人的屏幕显示一个表情。
+
+- **指令**:
+  ```bash
+  curl --location 'http://192.168.199.10:60010/skill-show-emotion?code={code}'
+  ```
+- **参数**:
+    - `code`: 表情数字编号
+      | 编号 | 表情 | 编号 | 表情 |
+      | :--- | :--- | :--- | :--- |
+      | `002` | 快乐 | `011` | 摇头轻快 |
+      | `003` | 哭 | `012` | 摇头否认 |
+      | `004` | 默认 | `013` | 消失 |
+      | `008` | 兴趣 | `014` | 出现 |
+- **返回值**:
+  ```json
+  {
+      "ok": true,
+      "cmd": "skill-show-emotion",
+      "result": "success|fail_empty_code"
+  }
+  ```
+
+### 8. 拍照
+
+控制机器人的任意一个摄像头拍照。
+
+- **指令**:
+  ```bash
+  curl --location 'http://192.168.199.10:60010/skill-take-photo?id={id}'
+  ```
+- **参数**:
+    - `id`: 摄像头编号
+      | 编号 | 描述 |
+      | :--- | :--- |
+      | `0` | 前置人脸摄像头 |
+      | `1` | 右边棋盘摄像头 |
+      | `2` | 左边棋盘摄像头 |
 - **返回值**: JPEG图片二进制数据
 
-| 查询参数 | 类型 | 说明 |
-|----------|------|------|
-| id | integer | 0=前置、1=右边、2=左边 |
+### 9. 录音
 
-### 1.9 录音
+控制机器人的麦克风录音。
 
-- **URL**: `GET http://192.168.199.10:60010/skill-record`
-- **返回值**: 
-  - code=0: 成功文本
-  - code=1: PCM音频二进制数据(16k单声道)
+- **指令**:
+  ```bash
+  curl --location 'http://192.168.199.10:60010/skill-record?code={code}'
+  ```
+- **参数**:
+    - `code`: 录音指令
+      | 编号 | 描述 |
+      | :--- | :--- |
+      | `0` | 开始录音 |
+      | `1` | 结束录音 |
+- **返回值**:
+    - 开始录音 (`code=0`): `skill-record success` (纯文本)
+    - 结束录音 (`code=1`): PCM音频二进制数据(采样率:16000; 声道:单通道)
 
-| 查询参数 | 类型 | 说明 |
-|----------|------|------|
-| code | integer | 0=开始录音、1=结束录音 |
+### 10. 显示图片
 
-### 1.10 显示图片
+控制机器人的屏幕显示一张图片。
 
-- **URL**: `POST http://192.168.199.10:60010/skill-show-image`
-- **Content-Type**: `multipart/form-data`
-- **参数**: `image` (文件)
-- **说明**: 仅支持 PNG 格式
-
----
-
-## 三、坐标系统
-
-### 棋盘 (13×13)
-
-| 位置 | x | y |
-|------|---|---|
-| 右上角 | 0 | 0 |
-| 左下角 | 12 | 12 |
-
-### 右棋盒
-
-| 位置 | x | y |
-|------|---|---|
-| 右上角 | -3.8 | 0 |
-| 左下角 | -1.8 | 7 |
-
-### 左棋盒
-
-| 位置 | x | y |
-|------|---|---|
-| 右上角 | 14.2 | 0 |
-| 左下角 | 15.8 | 7 |
+- **指令**:
+  ```bash
+  curl --location 'http://192.168.199.10:60010/skill-show-image' --form 'image=@"/C:/Users/Pictures/xxx.png"'
+  ```
+- **参数**:
+    - `image`: 图片地址。注意：只支持png格式的图片
+- **返回值**: `skill-show-image success`
 
 ---
 
-## 四、错误处理
+## 🚨 错误处理与策略
 
-### 落子失败（ret:24）
+### 落子失败（未吸子）
 
-- **现象**: `skill-move-tcp` 执行 `action=2` 返回 `ret:24`
+- **现象**: `skill-move-tcp` 执行 `action=2` 返回 `"result": "empty_put"`
 - **原因**: 未吸子却尝试落子
-- **处理**: 必须先确保 `action=1` 吸子成功（`ret:0`）后，才能执行 `action=2` 落子
+- **处理**: 必须先确保 `action=1` 吸子成功（`"result": "success"`）后，才能执行 `action=2` 落子
 
 ### 取子失败重试策略
 
