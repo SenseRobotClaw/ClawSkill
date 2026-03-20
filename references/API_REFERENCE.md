@@ -209,7 +209,27 @@
   }
   ```
 
-### 9. 拍照
+### 9. 播放音乐
+
+控制机器人播放指定的音频文件。由于音频播放可能比较耗时，此接口为异步调用。相当于背景音乐播放。
+
+- **指令**:
+  ```bash
+  curl --location 'http://192.168.199.10:60010/skill-play-audio' --form 'audio=@"/path/to/music.mp3"'
+  ```
+  通过'multipart/form-data' POST 数据
+- **参数**:
+    - `audio`: 音频文件。注意：只支持mp3格式的音频文件（采样率 16000 Hz 的单声道（Mono）格式。）
+- **返回值**:
+  ```json
+  {
+      "ok": true,
+      "cmd": "skill-play-audio",
+      "result": "success|fail_empty_audio|fail_decode_audio|fail_missing_audio_form"
+  }
+  ```
+
+### 10. 拍照
 
 控制机器人的任意一个摄像头拍照。
 
@@ -226,7 +246,7 @@
       | `2` | 左边棋盘摄像头 |
 - **返回值**: JPEG图片二进制数据
 
-### 10. 录音
+### 11. 录音
 
 控制机器人的麦克风录音。
 
@@ -244,7 +264,7 @@
     - 开始录音 (`code=0`): `skill-record success` (纯文本)
     - 结束录音 (`code=1`): PCM音频二进制数据(采样率:16000; 声道:单通道)
 
-### 11. 显示图片
+### 12. 显示图片
 
 控制机器人的屏幕显示一张图片。
 

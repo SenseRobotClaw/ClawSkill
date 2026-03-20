@@ -93,6 +93,19 @@ class RobotClient:
         """显示表情"""
         return self._api_get("/skill-show-emotion", {"code": code})
 
+    def play_audio(self, audio_path):
+        """播放音乐 (异步调用)"""
+        url = f"{self.api_base}/skill-play-audio"
+        print(f"📡 POST {url} audio={audio_path}")
+        try:
+            cmd = ['curl', '--location', url, '--form', f'audio=@"{audio_path}"']
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            print(f"✅ 响应: {result.stdout[:500]}")
+            return result.stdout
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Curl failed: {e.stderr}")
+            return ""
+
     def show_image(self, image_path):
         """显示图片"""
         # Using curl for multipart/form-data upload as it's simpler and more robust
@@ -262,6 +275,9 @@ def main():
     p = sub.add_parser("detect", help="查找棋盒棋子")
     p.add_argument("--board", action="store_true", help="查找棋盘上的棋子而不是棋盒")
     
+    p = sub.add_parser("play_audio", help="播放音乐")
+    p.add_argument("path", help="音频路径 (仅支持16000Hz单声道MP3)")
+
     p = sub.add_parser("show_image", help="显示图片")
     p.add_argument("path", help="图片路径 (仅支持PNG)")
 
@@ -272,6 +288,7 @@ def main():
         "pick": cmd_pick,
         "expression": cmd_expression, "photo": cmd_photo, "record": cmd_record,
         "detect": cmd_detect,
+        "play_audio": lambda a: RobotClient().play_audio(a.path),
         "show_image": lambda a: RobotClient().show_image(a.path)
     }
     cmds[args.command](args)

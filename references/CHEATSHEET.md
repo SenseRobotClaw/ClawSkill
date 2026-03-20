@@ -17,6 +17,7 @@ API: http://192.168.199.10:60010
 | 查找棋盘棋子 | `curl 'http://192.168.199.10:60010/skill-detect-board'` |
 | 清理棋盘 | `curl 'http://192.168.199.10:60010/skill-clean-board'` (需轮询判断 result: running/done) |
 | 语音播报 | `curl 'http://192.168.199.10:60010/skill-tts-chinese?content=TEXT'` |
+| 播放音乐 | `curl 'http://192.168.199.10:60010/skill-play-audio' -F 'audio=@/path/to/music.mp3'` |
 | 显示表情 | `curl 'http://192.168.199.10:60010/skill-show-emotion?code=008'` |
 | 拍照 | `curl 'http://192.168.199.10:60010/skill-take-photo?id=0'` |
 | 录音 | `curl 'http://192.168.199.10:60010/skill-record?code=0'` |

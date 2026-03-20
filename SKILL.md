@@ -108,7 +108,14 @@ curl --location 'http://192.168.199.10:60010/skill-show-emotion?code=008'
 curl --location 'http://192.168.199.10:60010/skill-tts-chinese?content=你好'
 ```
 
-### 流程五：清理棋盘
+### 流程五：播放音乐
+
+```bash
+# 异步调用，播放背景音乐 (仅支持 16000Hz 单声道 MP3)
+curl --location 'http://192.168.199.10:60010/skill-play-audio' --form 'audio=@"/path/to/music.mp3"'
+```
+
+### 流程六：清理棋盘
 
 把棋盘上的子收回棋盒。由于清理过程可能需要几分钟，此接口为异步调用，需要通过轮询该接口并判断返回的 `result` 字段来获取清理进度（`running`、`done` 或 `error`）。
 
@@ -117,28 +124,28 @@ curl --location 'http://192.168.199.10:60010/skill-tts-chinese?content=你好'
 curl --location 'http://192.168.199.10:60010/skill-clean-board'
 ```
 
-### 流程六：查找棋盒棋子
+### 流程七：查找棋盒棋子
 
 ```bash
 # 返回包含棋子坐标数组的 JSON 对象，其中 color 1=黑, 2=白
 curl --location 'http://192.168.199.10:60010/skill-detect-box'
 ```
 
-### 流程七：查找棋盘棋子
+### 流程八：查找棋盘棋子
 
 ```bash
 # 返回包含棋盘上棋子坐标数组的 JSON 对象，其中 color 1=黑, 2=白
 curl --location 'http://192.168.199.10:60010/skill-detect-board'
 ```
 
-### 流程八：拍照
+### 流程九：拍照
 
 ```bash
 # id: 0=前置, 1=右边, 2=左边
 curl --location 'http://192.168.199.10:60010/skill-take-photo?id=0'
 ```
 
-### 流程九：录音
+### 流程十：录音
 
 ```bash
 # 开始录音
@@ -147,7 +154,7 @@ curl --location 'http://192.168.199.10:60010/skill-record?code=0'
 curl --location 'http://192.168.199.10:60010/skill-record?code=1'
 ```
 
-### 流程十：显示图片
+### 流程十一：显示图片
 
 ```bash
 curl --location 'http://192.168.199.10:60010/skill-show-image' --form 'image=@"/path/to/image.png"'
@@ -162,6 +169,7 @@ curl --location 'http://192.168.199.10:60010/skill-show-image' --form 'image=@"/
 | 复位机械臂 | GET | `http://192.168.199.10:60010/skill-move-home` |
 | 取落子控制 | GET | `http://192.168.199.10:60010/skill-move-tcp?x=1&y=2&action=1` |
 | 语音播报 | GET | `http://192.168.199.10:60010/skill-tts-chinese?content=中文` |
+| 播放音乐 | POST | `http://192.168.199.10:60010/skill-play-audio` |
 | 看棋盘状态 | GET | `http://192.168.199.10:60010/skill-look-board` |
 | 清理棋盘 | GET | `http://192.168.199.10:60010/skill-clean-board` |
 | 查找棋盒棋子 | GET | `http://192.168.199.10:60010/skill-detect-box` |
