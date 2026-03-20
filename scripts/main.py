@@ -98,7 +98,7 @@ class RobotClient:
         url = f"{self.api_base}/skill-play-audio"
         print(f"📡 POST {url} audio={audio_path}")
         try:
-            cmd = ['curl', '--location', url, '--form', f'audio=@"{audio_path}"']
+            cmd = ['curl.exe', '--location', url, '--form', f'audio=@"{audio_path}";type=audio/mpeg']
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             print(f"✅ 响应: {result.stdout[:500]}")
             return result.stdout
@@ -115,7 +115,7 @@ class RobotClient:
         
         try:
             # Use curl to upload the file
-            cmd = ['curl', '--location', url, '--form', f'image=@"{image_path}"']
+            cmd = ['curl.exe', '--location', url, '--form', f'image=@"{image_path}";type=image/jpeg']
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             print(f"✅ 响应: {result.stdout[:500]}")
             return result.stdout
