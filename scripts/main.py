@@ -115,7 +115,7 @@ class RobotClient:
         
         try:
             # Use curl to upload the file
-            cmd = ['curl.exe', '--location', url, '--form', f'image=@"{image_path}";type=image/jpeg']
+            cmd = ['curl.exe', '--location', url, '--form', f'image=@"{image_path}";type=image/png']
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             print(f"✅ 响应: {result.stdout[:500]}")
             return result.stdout
