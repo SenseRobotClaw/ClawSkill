@@ -218,17 +218,29 @@
   {
       "ok": true,
       "cmd": "skill-detect-board",
-      "result": "success|fail_no_piece",
+      "result": "success|fail",
+      "fen": "9/9/9/4b4/9/9/9/9/9",
       "pieces": [
           {
-              "color": 1,
+              "class": 1,
               "x": 3,
               "y": 4
           }
       ]
   }
   ```
-  *说明：`pieces` 数组中的 `color` 表示棋子颜色（1黑，2白），`x` 和 `y` 表示在棋盘坐标系下的具体坐标。如果未检测到棋子，`ok` 为 `false`，`result` 为 `"fail_no_piece"`，`pieces` 为空数组 `[]`。*
+  *说明：`fen` 表示当前棋盘的 FEN 识别结果。`pieces` 数组中的 `class` 表示视觉识别出来的原始棋子类别枚举值，`x` 和 `y` 表示在棋盘坐标系下的具体坐标。如果识别失败，`ok` 为 `false`，`result` 为 `"fail"`，`fen` 为当前识别出的字符串，`pieces` 为空数组 `[]`。*
+
+  `class` 字段取值说明，对应 `e_piece_color_e`：
+  - `0`: `COLOR_EMPTY`
+  - `1`: `GO_BLACK`
+  - `2`: `GO_WIHTE`
+  - `4-9`: 中国跳棋，依次为 `CHINESE_CHECKERS_RED`、`CHINESE_CHECKERS_YELLOW`、`CHINESE_CHECKERS_GREEN`、`CHINESE_CHECKERS_BLUE`、`CHINESE_CHECKERS_BLACK`、`CHINESE_CHECKERS_WHITE`
+  - `11-16`: 国际象棋黑方，依次为 `KING`、`QUEEN`、`BISHOP`、`KNIGHT`、`ROOK`、`PAWN`
+  - `17-22`: 国际象棋白方，依次为 `KING`、`QUEEN`、`BISHOP`、`KNIGHT`、`ROOK`、`PAWN`
+  - `24-30`: 中国象棋红方，依次为 `KING`、`ADVISOR`、`ELEPHANT`、`HORSE`、`ROOK`、`CANNON`、`PAWN`
+  - `31-37`: 中国象棋黑方，依次为 `KING`、`ADVISOR`、`ELEPHANT`、`HORSE`、`ROOK`、`CANNON`、`PAWN`
+  - `39-42`: 国际跳棋，依次为 `INTERNATIONAL_CHECKERS_WHITE_PAWN`、`INTERNATIONAL_CHECKERS_WHITE_KING`、`INTERNATIONAL_CHECKERS_BLACK_PAWN`、`INTERNATIONAL_CHECKERS_BLACK_KING`
 
 ### 10. 显示表情
 

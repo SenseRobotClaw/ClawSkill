@@ -154,9 +154,11 @@ curl --location 'http://192.168.199.10:60010/skill-detect-box'
 ### 流程十：查找棋盘棋子
 
 ```bash
-# 返回包含棋盘上棋子坐标数组的 JSON 对象，其中 color 1=黑, 2=白
+# 返回包含当前棋盘 FEN 和棋子坐标数组的 JSON 对象
 curl --location 'http://192.168.199.10:60010/skill-detect-board'
 ```
+
+返回结果中的 `fen` 表示当前棋盘识别出的 FEN；`pieces[].class` 表示视觉识别出的原始棋子类别枚举值，`x` 和 `y` 为棋盘坐标。
 
 ### 流程十一：拍照
 

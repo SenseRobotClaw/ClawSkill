@@ -64,16 +64,13 @@ class RobotClient:
 
     def detect_board(self):
         """查找棋盘棋子的位置
-        returns: list of pieces, e.g. [{"color":1,"x":3,"y":4}] (color 1=黑, 2=白)
+        returns: full JSON response, e.g. {"result":"success","fen":"...","pieces":[{"class":24,"x":3,"y":4}]}
         """
         data = self._api_get("/skill-detect-board")
         try:
-            res = json.loads(data)
-            if res.get("ok") and res.get("result") == "success":
-                return res.get("pieces", [])
+            return json.loads(data)
         except json.JSONDecodeError:
-            pass
-        return []
+            return {"ok": False, "result": "error", "detail": "Invalid JSON response"}
 
     def clean_board(self):
         """清理棋盘 (异步调用，返回任务状态)
@@ -285,9 +282,9 @@ def cmd_record(args):
 def cmd_detect(args):
     client = RobotClient()
     if args.board:
-        print(json.dumps(client.detect_board(), indent=2))
+        print(json.dumps(client.detect_board(), indent=2, ensure_ascii=False))
     else:
-        print(json.dumps(client.detect_box(), indent=2))
+        print(json.dumps(client.detect_box(), indent=2, ensure_ascii=False))
 
 def main():
     parser = argparse.ArgumentParser(description="元萝卜下棋机器人控制")

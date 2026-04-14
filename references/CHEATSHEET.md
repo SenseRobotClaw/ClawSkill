@@ -66,3 +66,9 @@ curl 'http://192.168.199.10:60010/skill-set-chess?fen=rnbakabnr/9/1c5c1/p1p1p1p1
 # 校验一步走子前后的两个 FEN
 curl 'http://192.168.199.10:60010/skill-check-chinese-chess-rule?initFen=rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR&nextFen=rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKA1NR'
 ```
+
+## 棋盘识别结果
+
+- `skill-detect-board` 现在会返回当前棋盘的 `fen`
+- `pieces[].class` 表示视觉识别的原始棋子类别枚举值，不再是 `color`
+- 识别失败时 `result=fail`，同时保留当前识别出的 `fen`
