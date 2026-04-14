@@ -132,7 +132,53 @@
   }
   ```
 
-### 6. 查找棋盒棋子的位置
+### 6. 摆棋
+
+按照给定的 FEN 在棋盘上自动摆棋，此接口为异步调用，客户端需要通过轮询该接口来获取摆棋进度。
+
+- **指令**:
+  ```bash
+  curl --location 'http://192.168.199.10:60010/skill-set-chess?fen={fen}'
+  ```
+- **参数**:
+    - `fen`: 中国象棋局面的 FEN 字符串
+- **返回值**:
+  ```json
+  {
+      "ok": true,
+      "cmd": "skill-set-chess",
+      "started_at": "2024-03-19 12:00:00",
+      "result": "running|done|error|fail_missing_param",
+      "detail": "摆棋任务已开始",
+      "fen": "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR"
+  }
+  ```
+  *说明：当 `result` 为 `running` 时，表示摆棋任务仍在执行中；需要继续轮询该接口，直到返回 `done`、`error` 或 `fail_missing_param`。*
+
+### 7. 中国象棋规则校验
+
+对中国象棋走子前后的两个 FEN 进行规则校验。
+
+- **指令**:
+  ```bash
+  curl --location 'http://192.168.199.10:60010/skill-check-chinese-chess-rule?initFen={initFen}&nextFen={nextFen}'
+  ```
+- **参数**:
+    - `initFen`: 初始局面的 FEN，传给 `resetChessEngine`
+    - `nextFen`: 走一步棋之后的 FEN，传给 `checkRuleWithFen`
+- **返回值**:
+  ```json
+  {
+      "ok": true,
+      "cmd": "skill-check-chinese-chess-rule",
+      "result": "success|fail|fail_reset_engine|fail_missing_param",
+      "code": 0,
+      "rule_result": ""
+  }
+  ```
+  *说明：`code` 为中国象棋引擎返回的错误码。`rule_result` 为引擎返回的规则校验结果 JSON 字符串；当 `resetChessEngine` 失败时，该字段为空字符串。*
+
+### 8. 查找棋盒棋子的位置
 
 使用 CV 能力从棋盒中准确检测棋子的位置。
 
@@ -158,7 +204,7 @@
   ```
   *说明：`pieces` 数组中的 `color` 表示棋子颜色（1黑，2白），`x` 和 `y` 表示在棋盘坐标系下的具体坐标。如果未检测到棋子，`ok` 为 `false`，`result` 为 `"fail_no_piece"`，`pieces` 为空数组 `[]`。*
 
-### 7. 查找棋盘棋子的位置
+### 9. 查找棋盘棋子的位置
 
 使用 CV 能力从棋盘中准确检测棋子的位置。
 
@@ -184,7 +230,7 @@
   ```
   *说明：`pieces` 数组中的 `color` 表示棋子颜色（1黑，2白），`x` 和 `y` 表示在棋盘坐标系下的具体坐标。如果未检测到棋子，`ok` 为 `false`，`result` 为 `"fail_no_piece"`，`pieces` 为空数组 `[]`。*
 
-### 8. 显示表情
+### 10. 显示表情
 
 控制机器人的屏幕显示一个表情。
 
@@ -209,7 +255,7 @@
   }
   ```
 
-### 9. 播放音乐
+### 11. 播放音乐
 
 控制机器人播放指定的音频文件。由于音频播放可能比较耗时，此接口为异步调用。相当于背景音乐播放。
 
@@ -229,7 +275,7 @@
   }
   ```
 
-### 10. 拍照
+### 12. 拍照
 
 控制机器人的任意一个摄像头拍照。
 
@@ -246,7 +292,7 @@
       | `2` | 左边棋盘摄像头 |
 - **返回值**: JPEG图片二进制数据
 
-### 11. 录音
+### 13. 录音
 
 控制机器人的麦克风录音。
 
@@ -264,7 +310,7 @@
     - 开始录音 (`code=0`): `skill-record success` (纯文本)
     - 结束录音 (`code=1`): PCM音频二进制数据(采样率:16000; 声道:单通道)
 
-### 12. 显示图片
+### 14. 显示图片
 
 控制机器人的屏幕显示一张图片。
 

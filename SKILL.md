@@ -124,28 +124,48 @@ curl --location 'http://192.168.199.10:60010/skill-play-audio' --form 'audio=@"/
 curl --location 'http://192.168.199.10:60010/skill-clean-board'
 ```
 
-### 流程七：查找棋盒棋子
+### 流程七：按照 FEN 摆棋
+
+按照给定的中国象棋 FEN 自动摆棋。该接口也是异步调用，需要带着同一个 `fen` 反复轮询，直到返回的 `result` 变为 `done`、`error` 或 `fail_missing_param`。
+
+```bash
+# 启动摆棋任务
+curl --location 'http://192.168.199.10:60010/skill-set-chess?fen=rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR'
+
+# 继续轮询同一接口查看进度
+curl --location 'http://192.168.199.10:60010/skill-set-chess?fen=rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR'
+```
+
+### 流程八：中国象棋规则校验
+
+对中国象棋走子前后的两个 FEN 做规则校验。该接口为同步调用，返回引擎错误码 `code` 和规则校验结果 `rule_result`。
+
+```bash
+curl --location 'http://192.168.199.10:60010/skill-check-chinese-chess-rule?initFen=rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR&nextFen=rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKA1NR'
+```
+
+### 流程九：查找棋盒棋子
 
 ```bash
 # 返回包含棋子坐标数组的 JSON 对象，其中 color 1=黑, 2=白
 curl --location 'http://192.168.199.10:60010/skill-detect-box'
 ```
 
-### 流程八：查找棋盘棋子
+### 流程十：查找棋盘棋子
 
 ```bash
 # 返回包含棋盘上棋子坐标数组的 JSON 对象，其中 color 1=黑, 2=白
 curl --location 'http://192.168.199.10:60010/skill-detect-board'
 ```
 
-### 流程九：拍照
+### 流程十一：拍照
 
 ```bash
 # id: 0=前置, 1=右边, 2=左边
 curl --location 'http://192.168.199.10:60010/skill-take-photo?id=0'
 ```
 
-### 流程十：录音
+### 流程十二：录音
 
 ```bash
 # 开始录音
@@ -154,7 +174,7 @@ curl --location 'http://192.168.199.10:60010/skill-record?code=0'
 curl --location 'http://192.168.199.10:60010/skill-record?code=1'
 ```
 
-### 流程十一：显示图片
+### 流程十三：显示图片
 
 ```bash
 curl --location 'http://192.168.199.10:60010/skill-show-image' --form 'image=@"/path/to/image.png"'
@@ -172,6 +192,8 @@ curl --location 'http://192.168.199.10:60010/skill-show-image' --form 'image=@"/
 | 播放音乐 | POST | `http://192.168.199.10:60010/skill-play-audio` |
 | 看棋盘状态 | GET | `http://192.168.199.10:60010/skill-look-board` |
 | 清理棋盘 | GET | `http://192.168.199.10:60010/skill-clean-board` |
+| 按 FEN 摆棋 | GET | `http://192.168.199.10:60010/skill-set-chess?fen=...` |
+| 中国象棋规则校验 | GET | `http://192.168.199.10:60010/skill-check-chinese-chess-rule?initFen=...&nextFen=...` |
 | 查找棋盒棋子 | GET | `http://192.168.199.10:60010/skill-detect-box` |
 | 查找棋盘棋子 | GET | `http://192.168.199.10:60010/skill-detect-board` |
 | 显示表情 | GET | `http://192.168.199.10:60010/skill-show-emotion?code=008` |

@@ -16,6 +16,8 @@ API: http://192.168.199.10:60010
 | 查找棋盒棋子 | `curl 'http://192.168.199.10:60010/skill-detect-box'` |
 | 查找棋盘棋子 | `curl 'http://192.168.199.10:60010/skill-detect-board'` |
 | 清理棋盘 | `curl 'http://192.168.199.10:60010/skill-clean-board'` (需轮询判断 result: running/done) |
+| 按 FEN 摆棋 | `curl 'http://192.168.199.10:60010/skill-set-chess?fen=FEN'` (需轮询判断 result: running/done/error) |
+| 中国象棋规则校验 | `curl 'http://192.168.199.10:60010/skill-check-chinese-chess-rule?initFen=INIT&nextFen=NEXT'` |
 | 语音播报 | `curl 'http://192.168.199.10:60010/skill-tts-chinese?content=TEXT'` |
 | 播放音乐 | `curl 'http://192.168.199.10:60010/skill-play-audio' -F 'audio=@/path/to/music.mp3'` |
 | 显示表情 | `curl 'http://192.168.199.10:60010/skill-show-emotion?code=008'` |
@@ -46,4 +48,21 @@ curl 'http://192.168.199.10:60010/skill-detect-box'
 curl 'http://192.168.199.10:60010/skill-move-tcp?x=X&y=Y&action=1'
 # 3. 只有取子成功（"result": "success"）后，才落子到 (6,6)
 curl 'http://192.168.199.10:60010/skill-move-tcp?x=6&y=6&action=2'
+```
+
+## 中国象棋摆棋
+
+```bash
+# 按给定 FEN 启动摆棋任务
+curl 'http://192.168.199.10:60010/skill-set-chess?fen=rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR'
+
+# 继续轮询同一接口，直到 result 变为 done/error/fail_missing_param
+curl 'http://192.168.199.10:60010/skill-set-chess?fen=rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR'
+```
+
+## 中国象棋规则校验
+
+```bash
+# 校验一步走子前后的两个 FEN
+curl 'http://192.168.199.10:60010/skill-check-chinese-chess-rule?initFen=rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR&nextFen=rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKA1NR'
 ```

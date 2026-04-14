@@ -85,6 +85,27 @@ class RobotClient:
         except json.JSONDecodeError:
             return {"result": "error", "detail": "Invalid JSON response"}
 
+    def set_chess(self, fen):
+        """按照 FEN 摆棋 (异步调用，返回任务状态)
+        返回包含 result (running/done/error/fail_missing_param) 和 detail 的 JSON 对象
+        """
+        data = self._api_get("/skill-set-chess", {"fen": fen})
+        try:
+            return json.loads(data)
+        except json.JSONDecodeError:
+            return {"result": "error", "detail": "Invalid JSON response"}
+
+    def check_chinese_chess_rule(self, init_fen, next_fen):
+        """校验中国象棋走子前后两个 FEN 是否符合规则"""
+        data = self._api_get(
+            "/skill-check-chinese-chess-rule",
+            {"initFen": init_fen, "nextFen": next_fen},
+        )
+        try:
+            return json.loads(data)
+        except json.JSONDecodeError:
+            return {"result": "error", "detail": "Invalid JSON response", "raw": data}
+
     def tts(self, content):
         """语音播报"""
         return self._api_get("/skill-tts-chinese", {"content": content})
@@ -209,6 +230,28 @@ def cmd_clean(args):
             print(f"❌ 清理异常: {detail}")
             break
 
+def cmd_set_chess(args):
+    import time
+    print("开始摆棋任务...")
+    while True:
+        res = RobotClient().set_chess(args.fen)
+        status = res.get("result", "error")
+        detail = res.get("detail", "")
+
+        if status == "running":
+            print(f"⏳ {detail} (等待 10 秒后查询...)")
+            time.sleep(10)
+        elif status == "done":
+            print(f"✅ 摆棋完成: {detail}")
+            break
+        else:
+            print(f"❌ 摆棋异常: {detail}")
+            break
+
+def cmd_check_rule(args):
+    res = RobotClient().check_chinese_chess_rule(args.init_fen, args.next_fen)
+    print(json.dumps(res, indent=2, ensure_ascii=False))
+
 def cmd_home(args):
     RobotClient().move_home()
 
@@ -254,6 +297,13 @@ def main():
     sub.add_parser("clean", help="清理棋盘")
     sub.add_parser("home", help="复位机械臂")
 
+    p = sub.add_parser("set_chess", help="按照中国象棋 FEN 自动摆棋")
+    p.add_argument("fen", help="中国象棋局面的 FEN 字符串")
+
+    p = sub.add_parser("check_rule", help="校验中国象棋走子前后的 FEN 是否符合规则")
+    p.add_argument("init_fen", help="初始局面的 FEN")
+    p.add_argument("next_fen", help="走一步棋之后的 FEN")
+
     p = sub.add_parser("place", help="落子")
     p.add_argument("x", type=float, help="横坐标")
     p.add_argument("y", type=float, help="纵坐标")
@@ -284,6 +334,8 @@ def main():
     args = parser.parse_args()
     cmds = {
         "look": cmd_look, "place": cmd_place, "clean": cmd_clean,
+        "set_chess": cmd_set_chess,
+        "check_rule": cmd_check_rule,
         "home": cmd_home, "tts": cmd_tts, 
         "pick": cmd_pick,
         "expression": cmd_expression, "photo": cmd_photo, "record": cmd_record,
